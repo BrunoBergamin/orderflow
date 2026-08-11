@@ -14,6 +14,10 @@ spring:
       enabled: false
 
 orderflow:
+  # Desligado por padrao nos testes: varios deles autenticam repetidas vezes e bateriam no
+  # limite. O RateLimitIT liga com um teto proprio, para verificar o comportamento isolado.
+  rate-limit:
+    enabled: false
   security:
     jwt:
       secret: chave-de-teste-com-mais-de-32-caracteres-para-hs256

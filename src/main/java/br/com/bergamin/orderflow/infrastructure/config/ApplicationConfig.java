@@ -1,11 +1,14 @@
 package br.com.bergamin.orderflow.infrastructure.config;
 
+import br.com.bergamin.orderflow.infrastructure.ratelimit.RateLimitProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
 
 @Configuration
+@EnableConfigurationProperties(RateLimitProperties.class)
 public class ApplicationConfig {
 
     /**

@@ -83,6 +83,15 @@ springdoc:
     operations-sorter: method
 
 orderflow:
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    # Baixo de proposito: e a defesa contra tentativa de adivinhar senha.
+    login:
+      capacity: 5
+      period: 1m
+    orders:
+      capacity: 30
+      period: 1m
   security:
     jwt:
       # Valor de desenvolvimento. Em qualquer outro ambiente entra por variavel de ambiente.

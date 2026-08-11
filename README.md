@@ -114,6 +114,26 @@ leituras. O pessimista serializaria todo mundo para proteger um caso que quase n
 O otimista deixa todos correrem e rejeita quem perdeu a corrida — com 409, e repetir tende a
 funcionar.
 
+**Limite de vazão com chave diferente por rota.** Login é limitado por **IP** — não existe
+usuário ainda, e o alvo é justamente quem está tentando adivinhar senha. Criação de pedido é
+limitada por **cliente autenticado**, porque limitar por IP puniria uma empresa inteira atrás
+do mesmo NAT.
+
+Usei token bucket (Bucket4j) em vez de contador por janela fixa: a janela fixa deixa passar
+o dobro do limite na virada — 30 no segundo 59 e mais 30 no segundo 61. O balde recarrega de
+forma contínua e não tem essa borda.
+
+Dois detalhes que descobri no caminho. O primeiro: um `Filter` anotado com `@Component` é
+registrado pelo Boot **e** adicionado por mim na cadeia de segurança, ou seja, roda duas
+vezes. No filtro JWT isso passaria despercebido; no de rate limit cada chamada consumiria
+duas fichas e o limite efetivo seria metade do configurado. O segundo: sem expiração, o mapa
+de baldes acumularia uma entrada por IP para sempre — um vazamento de memória lento. Os
+baldes ficam num cache Caffeine com `expireAfterAccess`.
+
+Limitação assumida: os baldes vivem na memória da instância. Com várias réplicas, o teto
+efetivo é multiplicado pelo número delas. Para limite global o estado iria para o Redis — o
+Bucket4j suporta, e mudaria só uma classe.
+
 **Modelo de domínio separado das entidades JPA.** Custa um mapeador. Em troca, `Order` não
 tem construtor vazio público nem setter de status, e não carrega anotação nenhuma — as
 regras rodam em milissegundos, sem subir contexto Spring, e uma decisão de schema não vira
@@ -131,11 +151,11 @@ dependentes de rede e não reproduzíveis. O que importa arquiteturalmente é o 
 
 ```bash
 ./mvnw test      # 45 testes, ~15s, não precisa de Docker
-./mvnw verify    # + 18 testes de integração com PostgreSQL real
+./mvnw verify    # + 25 testes de integração com PostgreSQL real
 ```
 
-São 65 no total: 20 de domínio, 13 de casos de uso com Mockito, 8 regras de arquitetura,
-17 de API, 1 de concorrência e 2 do outbox com Kafka.
+São 70 no total: 20 de domínio, 13 de casos de uso com Mockito, 8 regras de arquitetura,
+17 de API, 5 de limite de vazão, 1 de concorrência e 2 do outbox com Kafka.
 
 Os testes de integração usam **PostgreSQL real via Testcontainers**, não H2. As coisas de
 que este projeto depende — `FOR UPDATE SKIP LOCKED`, índice parcial, `TIMESTAMPTZ`, o
@@ -163,8 +183,10 @@ não.
 | `POST` | `/api/v1/orders/{id}/cancellation` | autenticado |
 
 Todo erro sai em RFC 7807 (`application/problem+json`). Estoque insuficiente é 422 e vem
-com `sku`, `requested` e `available` no corpo, para o cliente conseguir reagir. Erro
-inesperado devolve um `errorId` correlacionado ao log, nunca stack trace.
+com `sku`, `requested` e `available` no corpo, para o cliente conseguir reagir. Limite de
+vazão excedido é 429, com `Retry-After` e os cabeçalhos `X-RateLimit-*` em toda resposta —
+assim o cliente consegue se conter antes de levar bloqueio. Erro inesperado devolve um
+`errorId` correlacionado ao log, nunca stack trace.
 
 ## Detalhes que costumam faltar
 
@@ -186,7 +208,8 @@ inesperado devolve um `errorId` correlacionado ao log, nunca stack trace.
 ## Stack
 
 Java 21, Spring Boot 3.5.16 (Web, Data JPA, Security, Validation, Actuator), PostgreSQL 16 +
-Flyway, Kafka via Spring Kafka, JWT com jjwt, springdoc/Swagger, Micrometer + Prometheus.
+Flyway, Kafka via Spring Kafka, JWT com jjwt, Bucket4j + Caffeine para limite de vazão,
+springdoc/Swagger, Micrometer Tracing + Prometheus.
 Testes com JUnit 5, AssertJ, Mockito, Testcontainers e ArchUnit. Docker multi-stage em
 camadas e GitHub Actions.
 

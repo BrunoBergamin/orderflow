@@ -1,8 +1,10 @@
 package br.com.bergamin.orderflow.infrastructure.config;
 
+import br.com.bergamin.orderflow.infrastructure.ratelimit.RateLimitFilter;
 import br.com.bergamin.orderflow.infrastructure.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -46,6 +48,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   RateLimitFilter rateLimitFilter,
                                                    ObjectMapper objectMapper) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
@@ -69,6 +72,9 @@ public class SecurityConfig {
                                         "Seu usuario nao tem permissao para esta operacao.",
                                         request.getRequestURI())))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // Depois da autenticacao: e o que permite limitar pedido por cliente e
+                // login por IP, cada um com a chave que faz sentido.
+                .addFilterAfter(rateLimitFilter, JwtAuthenticationFilter.class)
                 .build();
     }
 
@@ -88,6 +94,33 @@ public class SecurityConfig {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), problem);
+    }
+
+    /**
+     * Impede o registro automatico dos filtros pelo Boot.
+     *
+     * <p>Um {@code Filter} anotado com {@code @Component} e registrado pelo Spring Boot no
+     * container servlet <b>e</b> adicionado por nos na cadeia de seguranca -- ou seja, roda
+     * duas vezes por requisicao. No filtro JWT isso passaria despercebido, porque
+     * autenticar duas vezes da no mesmo. No de limite de vazao seria um bug de verdade:
+     * cada chamada consumiria duas fichas e o limite efetivo seria metade do configurado.</p>
+     */
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> disableJwtFilterAutoRegistration(
+            JwtAuthenticationFilter filter) {
+        return disableAutoRegistration(filter);
+    }
+
+    @Bean
+    public FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(
+            RateLimitFilter filter) {
+        return disableAutoRegistration(filter);
+    }
+
+    private <T extends jakarta.servlet.Filter> FilterRegistrationBean<T> disableAutoRegistration(T filter) {
+        FilterRegistrationBean<T> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
