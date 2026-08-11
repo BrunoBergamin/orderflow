@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build, testes e analise de arquitetura
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      # `verify` roda tudo: testes de dominio, casos de uso, regras de arquitetura
+      # (ArchUnit) e os testes de integracao com Testcontainers -- o runner do GitHub
+      # ja tem Docker, entao o PostgreSQL real sobe aqui do mesmo jeito que na maquina.
+      - name: Build e testes
+        run: ./mvnw -B verify
+
+      - name: Publicar relatorio de testes
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorios-de-teste
+          path: |
+            target/surefire-reports/
+            target/failsafe-reports/
+            target/site/jacoco/
+
+      - name: Validar build da imagem Docker
+        run: docker build -t orderflow:ci .

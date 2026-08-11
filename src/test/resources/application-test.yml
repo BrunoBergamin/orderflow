@@ -1,0 +1,32 @@
+# Perfil dos testes de integracao.
+# O banco vem do Testcontainers (ver AbstractIntegrationTest); aqui ficam apenas os
+# ajustes que tornam o teste deterministico.
+spring:
+  jpa:
+    hibernate:
+      # Continua validando o mapeamento contra o schema criado pelo Flyway: se uma entidade
+      # e a migration divergirem, o teste quebra em vez de o bug aparecer em producao.
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  threads:
+    virtual:
+      enabled: false
+
+orderflow:
+  security:
+    jwt:
+      secret: chave-de-teste-com-mais-de-32-caracteres-para-hs256
+      expiration-minutes: 60
+  # Sem broker nos testes de API: o que importa e a linha gravada na outbox.
+  # O OutboxRelayIT liga a mensageria com um Kafka embarcado.
+  messaging:
+    enabled: false
+  demo-data:
+    enabled: false
+
+logging:
+  level:
+    org.testcontainers: WARN
+    com.github.dockerjava: WARN
+    org.springframework.test.context: WARN
