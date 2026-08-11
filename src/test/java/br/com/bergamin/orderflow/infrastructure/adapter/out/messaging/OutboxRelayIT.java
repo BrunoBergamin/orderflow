@@ -86,6 +86,9 @@ class OutboxRelayIT extends AbstractIntegrationTest {
                 .as("a chave e o id do pedido, o que garante ordem por agregado na particao")
                 .isEqualTo(pedido.getId().toString());
         assertThat(cabecalho(mensagem, "eventType")).isEqualTo("Order.Placed");
+        assertThat(cabecalho(mensagem, "eventId"))
+                .as("id estavel da ocorrencia, sem o qual o consumidor nao consegue ser idempotente")
+                .isNotNull();
         assertThat(mensagem.value())
                 .contains(pedido.getId().toString())
                 .contains(cliente.toString());

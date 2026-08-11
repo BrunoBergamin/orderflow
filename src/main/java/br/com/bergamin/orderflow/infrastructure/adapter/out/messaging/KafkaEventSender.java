@@ -34,10 +34,18 @@ public class KafkaEventSender {
         this.sendTimeoutSeconds = sendTimeoutSeconds;
     }
 
-    public void send(UUID aggregateId, String eventType, String payload) throws Exception {
+    /**
+     * @param eventId id da linha da outbox. Vai no cabecalho porque a entrega e
+     *                "pelo menos uma vez": sem um identificador estavel da ocorrencia, o
+     *                consumidor nao tem como distinguir uma reentrega de um fato novo e
+     *                acabaria processando o mesmo evento duas vezes.
+     */
+    public void send(UUID eventId, UUID aggregateId, String eventType, String payload) throws Exception {
         ProducerRecord<String, String> record =
                 new ProducerRecord<>(topic, aggregateId.toString(), payload);
+        record.headers().add("eventId", eventId.toString().getBytes(StandardCharsets.UTF_8));
         record.headers().add("eventType", eventType.getBytes(StandardCharsets.UTF_8));
+        record.headers().add("aggregateId", aggregateId.toString().getBytes(StandardCharsets.UTF_8));
 
         kafkaTemplate.send(record).get(sendTimeoutSeconds, TimeUnit.SECONDS);
     }
