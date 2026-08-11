@@ -7,7 +7,7 @@ import java.util.UUID;
  * Linha de um pedido.
  *
  * <p>O preco unitario e copiado do produto no momento da compra (snapshot). Se o produto
- * mudar de preco depois, o historico do pedido continua correto -- requisito basico de
+ * mudar de preco depois, o historico do pedido continua correto. Requisito basico de
  * qualquer sistema que emite nota fiscal.</p>
  */
 public record OrderItem(UUID productId, String sku, String description, int quantity, Money unitPrice) {

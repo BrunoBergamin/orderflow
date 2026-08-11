@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p>Vinte compradores disputam 5 unidades ao mesmo tempo. Sem lock otimista, todos leriam
  * "estoque = 5", todos gravariam "estoque = 4", e a loja venderia 20 unidades de um produto
- * com 5 -- o bug que so aparece na Black Friday e some quando voce tenta reproduzir.</p>
+ * com 5. O bug que so aparece na Black Friday e some quando voce tenta reproduzir.</p>
  *
  * <p>O criterio de sucesso nao e "exatamente 5 pedidos": sob concorrencia real, transacoes
  * que perdem o lock sao rejeitadas com 409 e o cliente repete. O que precisa valer sempre e

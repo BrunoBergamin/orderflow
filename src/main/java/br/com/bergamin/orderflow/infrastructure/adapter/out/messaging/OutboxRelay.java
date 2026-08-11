@@ -20,7 +20,7 @@ import java.util.List;
  * {@code FOR UPDATE SKIP LOCKED}, o que torna seguro escalar a aplicacao horizontalmente:
  * duas instancias nunca pegam a mesma linha.</p>
  *
- * <p>Uma falha de envio nao derruba o lote inteiro -- o evento fica pendente, com o erro e o
+ * <p>Uma falha de envio nao derruba o lote inteiro. O evento fica pendente, com o erro e o
  * numero de tentativas registrados, e volta na proxima rodada. E entrega "pelo menos uma
  * vez": o consumidor precisa tolerar repeticao.</p>
  */

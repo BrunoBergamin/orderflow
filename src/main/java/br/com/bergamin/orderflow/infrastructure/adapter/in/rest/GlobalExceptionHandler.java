@@ -29,7 +29,7 @@ import java.util.UUID;
  * Converte excecoes em respostas RFC 7807 ({@code application/problem+json}).
  *
  * <p>Um so lugar decide o status HTTP de cada falha. Os casos de uso lancam excecao de
- * negocio e nao sabem o que e "409" -- se a API virar gRPC amanha, muda apenas esta classe.</p>
+ * negocio e nao sabem o que e "409". Se a API virar gRPC amanha, muda apenas esta classe.</p>
  *
  * <p>Erros inesperados (500) nunca devolvem stack trace: o cliente recebe um
  * {@code errorId}, o mesmo id vai para o log, e o suporte cruza os dois. Vazar mensagem de
@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
     /**
      * Lock otimista perdido: outra requisicao alterou o mesmo registro primeiro.
      *
-     * <p>409 e a resposta correta -- o pedido nao aconteceu, e repetir a chamada tende a
+     * <p>409 e a resposta correta. O pedido nao aconteceu, e repetir a chamada tende a
      * funcionar. E este o caminho que impede a venda de estoque que nao existe.</p>
      */
     @ExceptionHandler(OptimisticLockingFailureException.class)

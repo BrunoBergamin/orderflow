@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Fluxo completo da API contra PostgreSQL real.
  *
  * <p>Cada teste passa pela pilha inteira: HTTP -> JWT -> caso de uso -> JPA -> Postgres.
- * Nada e mockado, exceto o adquirente -- que ja e simulado por design.</p>
+ * Nada e mockado, exceto o adquirente, que ja e simulado por design.</p>
  */
 @AutoConfigureMockMvc
 @DisplayName("API de pedidos (integracao)")

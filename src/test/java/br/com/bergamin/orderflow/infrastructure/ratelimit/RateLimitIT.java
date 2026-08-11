@@ -56,7 +56,7 @@ class RateLimitIT extends AbstractIntegrationTest {
      *
      * <p>Contador, e nao sorteio: a primeira versao usava um numero aleatorio entre 250
      * valores e dois testes acabavam sorteando o mesmo IP de vez em quando. Passava na
-     * maquina e quebrava no CI -- teste instavel e pior do que teste nenhum, porque ensina
+     * maquina e quebrava no CI. Teste instavel e pior do que teste nenhum, porque ensina
      * o time a ignorar build vermelho.</p>
      */
     private static final AtomicInteger CONTADOR_DE_IP = new AtomicInteger();

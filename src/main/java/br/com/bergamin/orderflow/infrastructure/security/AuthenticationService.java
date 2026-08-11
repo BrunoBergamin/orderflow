@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>E-mail inexistente, senha errada e conta desativada produzem exatamente a mesma
  * resposta. Mensagens diferentes deixariam a API responder "esse e-mail existe" para quem
- * so quer descobrir quem sao os clientes -- enumeracao de usuarios.</p>
+ * so quer descobrir quem sao os clientes. Enumeracao de usuarios.</p>
  */
 @Service
 public class AuthenticationService {

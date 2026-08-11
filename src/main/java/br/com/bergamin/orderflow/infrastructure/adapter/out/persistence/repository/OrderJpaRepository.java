@@ -14,7 +14,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID> 
     /**
      * Traz o pedido e seus itens em uma consulta so.
      *
-     * <p>Sem o {@code @EntityGraph} seriam duas idas ao banco por pedido -- o N+1 classico.
+     * <p>Sem o {@code @EntityGraph} seriam duas idas ao banco por pedido. O N+1 classico.
      * Nas listagens paginadas o join fetch nao serve (paginacao viraria em memoria), entao
      * la a solucao e {@code hibernate.default_batch_fetch_size}, configurado no
      * application.yml.</p>

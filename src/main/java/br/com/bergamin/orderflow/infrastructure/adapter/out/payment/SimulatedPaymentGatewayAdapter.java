@@ -13,7 +13,7 @@ import java.util.UUID;
  * <p>Nao existe integracao real com Stripe/Pagar.me aqui de proposito: o objetivo do projeto
  * e mostrar o fluxo transacional em volta do pagamento, e uma chave de sandbox de terceiro
  * so tornaria os testes nao reproduziveis. O contrato ({@link PaymentGatewayPort}) e o que
- * importa -- trocar por um cliente HTTP real e escrever outra classe nesta pasta, sem tocar
+ * importa. Trocar por um cliente HTTP real e escrever outra classe nesta pasta, sem tocar
  * em caso de uso nem em dominio.</p>
  *
  * <p>O resultado e deterministico pelo token, o que deixa os testes de aprovacao e de recusa

@@ -104,7 +104,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
      *
      * <p>O primeiro endereco da lista e o cliente original; os demais sao os proxies do
      * caminho. Vale lembrar que esse cabecalho e falsificavel se a aplicacao estiver exposta
-     * direto -- em producao ele so deve ser considerado quando ha um proxy confiavel a
+     * direto. Em producao ele so deve ser considerado quando ha um proxy confiavel a
      * frente.</p>
      */
     private String clientIp(HttpServletRequest request) {

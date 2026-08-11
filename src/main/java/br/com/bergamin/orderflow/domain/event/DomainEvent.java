@@ -8,7 +8,7 @@ import java.util.UUID;
  *
  * <p>Os eventos sao registrados pelo agregado e gravados na tabela {@code outbox_event}
  * na mesma transacao da mudanca de estado. Um relay assincrono os publica no Kafka
- * depois -- padrao Transactional Outbox, que evita o cenario "salvei no banco mas o
+ * depois. Padrao Transactional Outbox, que evita o cenario "salvei no banco mas o
  * evento se perdeu" (ou o inverso).</p>
  */
 public interface DomainEvent {

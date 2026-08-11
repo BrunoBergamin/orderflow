@@ -18,7 +18,7 @@ import java.util.UUID;
  *
  * <p>Rodar teste em H2 e testar outro banco. Coisas que este projeto usa --
  * {@code FOR UPDATE SKIP LOCKED}, indice parcial, {@code TIMESTAMPTZ}, o comportamento real
- * do lock otimista sob concorrencia -- ou nao existem no H2 ou se comportam diferente. O
+ * do lock otimista sob concorrencia, ou nao existem no H2 ou se comportam diferente. O
  * container garante que o que passa aqui passa em producao.</p>
  *
  * <p>O container e iniciado uma unica vez para toda a suite (padrao singleton container),

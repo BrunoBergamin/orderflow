@@ -7,7 +7,7 @@ import java.time.Duration;
 /**
  * Limites de vazao por rota.
  *
- * <p>Ficam em configuracao porque o numero certo so aparece com trafego real -- ajustar um
+ * <p>Ficam em configuracao porque o numero certo so aparece com trafego real. Ajustar um
  * limite nao pode exigir release.</p>
  */
 @ConfigurationProperties(prefix = "orderflow.rate-limit")

@@ -9,13 +9,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Tabela {@code outbox_event} -- o coracao do padrao Transactional Outbox.
+ * Tabela {@code outbox_event}. O coracao do padrao Transactional Outbox.
  *
  * <p>O evento e gravado aqui na MESMA transacao da mudanca de estado do pedido. Ou os dois
  * acontecem, ou nenhum. Um relay le as linhas com {@code published_at IS NULL} e entrega no
  * Kafka depois, com retentativa. Isso troca "entrega exatamente uma vez" (impossivel) por
  * "entrega pelo menos uma vez com ordem por agregado", que e o que da para garantir de
- * verdade -- e por isso o consumidor precisa ser idempotente.</p>
+ * verdade, e por isso o consumidor precisa ser idempotente.</p>
  */
 @Entity
 @Table(name = "outbox_event")

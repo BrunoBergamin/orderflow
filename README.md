@@ -1,4 +1,4 @@
-# OrderFlow — API de pedidos
+# OrderFlow · API de pedidos
 
 [![CI](https://github.com/BrunoBergamin/orderflow/actions/workflows/ci.yml/badge.svg)](https://github.com/BrunoBergamin/orderflow/actions/workflows/ci.yml)
 ![Java 21](https://img.shields.io/badge/Java-21-orange)
@@ -6,8 +6,10 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
 ![Kafka](https://img.shields.io/badge/Kafka-KRaft-black)
 
-API de pedidos em Java 21 e Spring Boot. Escrevi para estudar as partes que um CRUD não
-ensina — as que só aparecem quando algo dá errado no meio do caminho.
+API de pedidos em Java 21 e Spring Boot.
+
+Escrevi para estudar as partes que um CRUD não ensina: as que só aparecem quando algo dá
+errado no meio do caminho.
 
 ## Os três problemas que este projeto resolve
 
@@ -19,14 +21,17 @@ o pedido original com 200 em vez de criar outro.
 **Duas pessoas disputando a última unidade.** Se as duas leem "estoque = 1" e as duas
 gravam "estoque = 0", a loja vendeu dois de um produto que tinha um. O estoque usa lock
 otimista (`@Version`): o `UPDATE` sai com `WHERE version = ?`, o segundo não acerta nenhuma
-linha e recebe 409. Tem um teste com 20 threads disputando 5 unidades que verifica o
-invariante — estoque final = estoque inicial − pedidos criados, nunca negativo.
+linha e recebe 409.
+
+Tem um teste com 20 threads disputando 5 unidades. Ele verifica o invariante: estoque final
+= estoque inicial − pedidos criados, nunca negativo.
 
 **O pedido salvou mas o evento não saiu.** Ou o contrário. Publicar direto no Kafka dentro
 do caso de uso cria uma escrita dupla sem transação: se o `send()` funciona e o commit
-falha, o resto do sistema reage a um pedido que não existe. A solução é o Transactional
-Outbox — o evento é gravado numa tabela na mesma transação do pedido, e um relay assíncrono
-entrega no Kafka depois, com retentativa.
+falha, o resto do sistema reage a um pedido que não existe.
+
+A solução é o Transactional Outbox: o evento é gravado numa tabela na mesma transação do
+pedido, e um relay assíncrono entrega no Kafka depois, com retentativa.
 
 ## Rodando
 
@@ -38,9 +43,9 @@ docker compose up --pull always  # baixa a imagem pronta do GHCR, sem compilar
 Sobe PostgreSQL, Kafka (KRaft, sem ZooKeeper) e a API. Swagger em
 http://localhost:8080/swagger-ui.html.
 
-A imagem é publicada em `ghcr.io/brunobergamin/orderflow` a cada push na `main`, e só
-depois de os testes passarem — imagem quebrada no registry é pior que imagem nenhuma,
-porque parece que funciona.
+A imagem é publicada em `ghcr.io/brunobergamin/orderflow` a cada push na `main`, e só depois
+de os testes passarem. Imagem quebrada no registry é pior que imagem nenhuma, porque parece
+que funciona.
 
 Dois usuários já vêm criados: `cliente@orderflow.dev` / `cliente123` e
 `admin@orderflow.dev` / `admin123`.
@@ -60,8 +65,8 @@ curl -X POST http://localhost:8080/api/v1/orders \
   -d "{\"items\":[{\"productId\":\"$PRODUTO\",\"quantity\":2}]}"
 ```
 
-Para pagar, use qualquer token. `tok_decline` recusa por saldo e `tok_fraud` por fraude —
-os dois devolvem o estoque.
+Para pagar, use qualquer token. `tok_decline` recusa por saldo e `tok_fraud` por fraude.
+Os dois devolvem o estoque.
 
 ## O caminho de um pedido
 
@@ -92,18 +97,18 @@ sequenceDiagram
 
 **A cobrança no gateway acontece fora da transação.** Chamada de rede dentro de
 `@Transactional` segura uma conexão do pool durante todo o round-trip; com o adquirente
-lento, o pool esgota e a API inteira para — inclusive requisições que nem tocam em
+lento, o pool esgota e a API inteira para, inclusive requisições que nem tocam em
 pagamento. O fluxo é: lê o pedido, cobra fora de transação, e abre uma transação curta só
 para gravar o desfecho. A janela entre ler e gravar é coberta pelo lock otimista.
 
 Isso obrigou a separar o `OrderPaymentApplier` em outro bean. `@Transactional` só vale
-quando a chamada passa pelo proxy do Spring — se o método morasse na mesma classe e fosse
+quando a chamada passa pelo proxy do Spring. Se o método morasse na mesma classe e fosse
 chamado com `this.apply(...)`, a anotação seria silenciosamente ignorada.
 
 **O trace da requisição viaja dentro da linha da outbox.** Esse foi o detalhe que eu não
 tinha previsto. A outbox quebra a correlação automática: quando o relay publica o evento, a
 requisição HTTP já terminou e o contexto de trace daquela thread não existe mais. O rastro
-morria no commit e recomeçava do zero no consumidor — justamente onde investigar um problema
+morria no commit e recomeçava do zero no consumidor, justamente onde investigar um problema
 fica difícil.
 
 A solução foi guardar o `trace_id` na própria linha e reenviá-lo como cabeçalho na hora de
@@ -116,33 +121,36 @@ Sem isso, ou os eventos sairiam duplicados, ou as instâncias formariam fila num
 
 **Lock otimista em vez de pessimista.** Conflito de estoque é raro perto do volume de
 leituras. O pessimista serializaria todo mundo para proteger um caso que quase não acontece.
-O otimista deixa todos correrem e rejeita quem perdeu a corrida — com 409, e repetir tende a
+O otimista deixa todos correrem e rejeita quem perdeu a corrida, com 409, e repetir tende a
 funcionar.
 
-**Limite de vazão com chave diferente por rota.** Login é limitado por **IP** — não existe
-usuário ainda, e o alvo é justamente quem está tentando adivinhar senha. Criação de pedido é
-limitada por **cliente autenticado**, porque limitar por IP puniria uma empresa inteira atrás
-do mesmo NAT.
+**Limite de vazão com chave diferente por rota.** Login é limitado por **IP**: não existe
+usuário ainda, e o alvo é quem está tentando adivinhar senha.
 
-Usei token bucket (Bucket4j) em vez de contador por janela fixa: a janela fixa deixa passar
-o dobro do limite na virada — 30 no segundo 59 e mais 30 no segundo 61. O balde recarrega de
+Criação de pedido é limitada por **cliente autenticado**, porque limitar por IP puniria uma
+empresa inteira atrás do mesmo NAT.
+
+Usei token bucket (Bucket4j) em vez de contador por janela fixa. A janela fixa deixa passar
+o dobro do limite na virada: 30 no segundo 59 e mais 30 no segundo 61. O balde recarrega de
 forma contínua e não tem essa borda.
 
-Dois detalhes que descobri no caminho. O primeiro: um `Filter` anotado com `@Component` é
-registrado pelo Boot **e** adicionado por mim na cadeia de segurança, ou seja, roda duas
-vezes. No filtro JWT isso passaria despercebido; no de rate limit cada chamada consumiria
-duas fichas e o limite efetivo seria metade do configurado. O segundo: sem expiração, o mapa
-de baldes acumularia uma entrada por IP para sempre — um vazamento de memória lento. Os
-baldes ficam num cache Caffeine com `expireAfterAccess`.
+Dois detalhes que descobri no caminho:
+
+- Um `Filter` anotado com `@Component` é registrado pelo Boot **e** adicionado por mim na
+  cadeia de segurança. Roda duas vezes. No filtro JWT isso passaria despercebido; no de rate
+  limit cada chamada consumiria duas fichas, e o limite efetivo seria metade do configurado.
+- Sem expiração, o mapa de baldes acumularia uma entrada por IP para sempre. Vazamento de
+  memória lento. Os baldes ficam num cache Caffeine com `expireAfterAccess`.
 
 Limitação assumida: os baldes vivem na memória da instância. Com várias réplicas, o teto
-efetivo é multiplicado pelo número delas. Para limite global o estado iria para o Redis — o
+efetivo é multiplicado pelo número delas. Para limite global o estado iria para o Redis. O
 Bucket4j suporta, e mudaria só uma classe.
 
-**Modelo de domínio separado das entidades JPA.** Custa um mapeador. Em troca, `Order` não
-tem construtor vazio público nem setter de status, e não carrega anotação nenhuma — as
-regras rodam em milissegundos, sem subir contexto Spring, e uma decisão de schema não vira
-mudança de regra de negócio.
+**Modelo de domínio separado das entidades JPA.** Custa um mapeador.
+
+Em troca, `Order` não tem construtor vazio público, nem setter de status, nem anotação
+nenhuma. As regras rodam em milissegundos, sem subir contexto Spring, e uma decisão de
+schema não vira mudança de regra de negócio.
 
 **Pagamento e cancelamento são sub-recursos** (`POST /orders/{id}/payment`), não um `PATCH`
 de status. Modelam a ação de negócio; um PATCH genérico aceitaria qualquer transição.
@@ -162,9 +170,10 @@ dependentes de rede e não reproduzíveis. O que importa arquiteturalmente é o 
 São 70 no total: 20 de domínio, 13 de casos de uso com Mockito, 8 regras de arquitetura,
 17 de API, 5 de limite de vazão, 1 de concorrência e 2 do outbox com Kafka.
 
-Os testes de integração usam **PostgreSQL real via Testcontainers**, não H2. As coisas de
-que este projeto depende — `FOR UPDATE SKIP LOCKED`, índice parcial, `TIMESTAMPTZ`, o
-comportamento do lock otimista sob concorrência — ou não existem no H2 ou se comportam
+Os testes de integração usam **PostgreSQL real via Testcontainers**, não H2.
+
+O projeto depende de `FOR UPDATE SKIP LOCKED`, índice parcial, `TIMESTAMPTZ` e do
+comportamento do lock otimista sob concorrência. No H2, isso ou não existe ou se comporta
 diferente. Um container sobe uma vez e serve a suíte inteira.
 
 O Hibernate roda com `ddl-auto: validate`, então se uma entidade e a migration do Flyway
@@ -187,27 +196,29 @@ não.
 | `POST` | `/api/v1/orders/{id}/payment` | autenticado |
 | `POST` | `/api/v1/orders/{id}/cancellation` | autenticado |
 
-Todo erro sai em RFC 7807 (`application/problem+json`). Estoque insuficiente é 422 e vem
-com `sku`, `requested` e `available` no corpo, para o cliente conseguir reagir. Limite de
-vazão excedido é 429, com `Retry-After` e os cabeçalhos `X-RateLimit-*` em toda resposta —
-assim o cliente consegue se conter antes de levar bloqueio. Erro inesperado devolve um
-`errorId` correlacionado ao log, nunca stack trace.
+Todo erro sai em RFC 7807 (`application/problem+json`).
+
+Estoque insuficiente é 422 e vem com `sku`, `requested` e `available` no corpo, para o
+cliente conseguir reagir. Limite de vazão excedido é 429, com `Retry-After` e os cabeçalhos
+`X-RateLimit-*` em toda resposta. Assim o cliente consegue se conter antes de levar bloqueio.
+
+Erro inesperado devolve um `errorId` correlacionado ao log, nunca stack trace.
 
 ## Detalhes que costumam faltar
 
-- `spring.jpa.open-in-view: false` — sessão aberta até o fim da resposta transforma qualquer
-  getter LAZY em consulta escondida na camada web
-- `hibernate.default_batch_fetch_size: 50` — carrega as coleções de uma página inteira num
-  único `IN (...)`, matando o N+1 sem paginar em memória
-- Índice parcial em `outbox_event ... WHERE published_at IS NULL` — o relay só consulta
-  pendentes; indexar as já publicadas custaria escrita para sempre
-- `Clock` injetado — nenhum `Instant.now()` solto, então os testes congelam o tempo em vez
-  de comparar com tolerância
-- O container roda como usuário não-root, com `MaxRAMPercentage` para a JVM respeitar o
-  limite de memória (causa clássica de `OOMKilled` em Kubernetes)
-- O login devolve a mesma mensagem para e-mail inexistente e senha errada — senão a API vira
-  um verificador de quais e-mails estão cadastrados
-- O `Tracer` é injetado como `ObjectProvider` — se o rastreamento for removido, o pedido
+- **`spring.jpa.open-in-view: false`**: sessão aberta até o fim da resposta transforma
+  qualquer getter LAZY em consulta escondida na camada web
+- **`hibernate.default_batch_fetch_size: 50`**: carrega as coleções de uma página inteira
+  num único `IN (...)`, matando o N+1 sem paginar em memória
+- **Índice parcial** em `outbox_event ... WHERE published_at IS NULL`: o relay só consulta
+  pendentes, e indexar as já publicadas custaria escrita para sempre
+- **`Clock` injetado**: nenhum `Instant.now()` solto, então os testes congelam o tempo em
+  vez de comparar com tolerância
+- **Container não-root**, com `MaxRAMPercentage` para a JVM respeitar o limite de memória.
+  Causa clássica de `OOMKilled` em Kubernetes
+- **Mesma mensagem de erro** para e-mail inexistente e senha errada. Senão a API vira um
+  verificador de quais e-mails estão cadastrados
+- **`Tracer` injetado como `ObjectProvider`**: se o rastreamento for removido, o pedido
   continua sendo gravado. Observabilidade não pode virar requisito para o negócio operar
 
 ## Stack
@@ -220,12 +231,12 @@ camadas e GitHub Actions.
 
 ## Os outros dois serviços
 
-- [orderflow-fulfillment](https://github.com/BrunoBergamin/orderflow-fulfillment) — consome
+- [orderflow-fulfillment](https://github.com/BrunoBergamin/orderflow-fulfillment), consome
   os eventos publicados aqui: consumo idempotente, DLQ, circuit breaker e cache Redis
-- [orderflow-reconciliation](https://github.com/BrunoBergamin/orderflow-reconciliation) —
+- [orderflow-reconciliation](https://github.com/BrunoBergamin/orderflow-reconciliation),
   conciliação financeira em lote com Spring Batch
 
 ---
 
-**Bruno Alves Bergamin** — back-end Java ·
+**Bruno Alves Bergamin**, back-end Java ·
 [LinkedIn](https://www.linkedin.com/in/bruno-alves-bergamin-6b711a347) · Licença MIT

@@ -26,7 +26,7 @@ import java.net.URI;
  * Configuracao de seguranca da API.
  *
  * <p>CSRF fica desligado porque a API e stateless e autentica por cabecalho
- * {@code Authorization}, nao por cookie de sessao -- sem cookie automatico, nao existe o
+ * {@code Authorization}, nao por cookie de sessao. Sem cookie automatico, nao existe o
  * ataque que o token CSRF previne. Se um dia a autenticacao virar cookie, isso precisa
  * voltar.</p>
  */
@@ -100,7 +100,7 @@ public class SecurityConfig {
      * Impede o registro automatico dos filtros pelo Boot.
      *
      * <p>Um {@code Filter} anotado com {@code @Component} e registrado pelo Spring Boot no
-     * container servlet <b>e</b> adicionado por nos na cadeia de seguranca -- ou seja, roda
+     * container servlet <b>e</b> adicionado por nos na cadeia de seguranca, ou seja, roda
      * duas vezes por requisicao. No filtro JWT isso passaria despercebido, porque
      * autenticar duas vezes da no mesmo. No de limite de vazao seria um bug de verdade:
      * cada chamada consumiria duas fichas e o limite efetivo seria metade do configurado.</p>

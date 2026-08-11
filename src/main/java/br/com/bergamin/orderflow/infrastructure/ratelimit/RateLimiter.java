@@ -18,7 +18,7 @@ import java.time.Duration;
  *
  * <p><b>Limitacao consciente:</b> os baldes vivem na memoria desta instancia. Com varias
  * replicas, cada uma aplica o proprio limite e o teto efetivo e multiplicado pelo numero de
- * instancias. Para limite global seria preciso mover o estado para o Redis -- o Bucket4j
+ * instancias. Para limite global seria preciso mover o estado para o Redis. O Bucket4j
  * suporta, e a troca seria so a implementacao desta classe. Para o objetivo aqui, que e
  * conter forca bruta e abuso obvio, o limite por instancia ja resolve.</p>
  */

@@ -19,7 +19,7 @@ import java.util.UUID;
  * Adaptador JPA da porta de pedidos.
  *
  * <p>Os metodos de leitura sao transacionais para que a colecao LAZY de itens seja
- * carregada dentro da unidade de trabalho -- {@code open-in-view} esta desligado, entao
+ * carregada dentro da unidade de trabalho. {@code open-in-view} esta desligado, entao
  * nao existe sessao aberta "de graca" ate o fim da requisicao.</p>
  */
 @Component

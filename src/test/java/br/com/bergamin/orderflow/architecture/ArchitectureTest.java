@@ -16,7 +16,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  *
  * <p>Diagrama em README envelhece; regra que roda no CI, nao. Se alguem importar
  * {@code OrderJpaEntity} dentro do dominio ou chamar um repositorio direto do controller,
- * o build quebra com o nome exato da classe infratora -- em vez de virar divida tecnica
+ * o build quebra com o nome exato da classe infratora, em vez de virar divida tecnica
  * descoberta seis meses depois.</p>
  */
 @AnalyzeClasses(

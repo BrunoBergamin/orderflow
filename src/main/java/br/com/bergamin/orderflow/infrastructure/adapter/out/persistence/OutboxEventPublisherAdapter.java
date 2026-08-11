@@ -35,7 +35,7 @@ public class OutboxEventPublisherAdapter implements DomainEventPublisherPort {
 
     /**
      * @param tracer via {@code ObjectProvider} para que a gravacao do evento continue
-     *               funcionando se o rastreamento for removido da aplicacao -- observabilidade
+     *               funcionando se o rastreamento for removido da aplicacao. Observabilidade
      *               nao pode ser requisito para o negocio operar
      */
     public OutboxEventPublisherAdapter(OutboxEventJpaRepository repository,

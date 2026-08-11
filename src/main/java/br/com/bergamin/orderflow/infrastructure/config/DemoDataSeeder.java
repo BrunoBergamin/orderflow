@@ -19,7 +19,7 @@ import java.util.UUID;
  * Popula o banco para a demonstracao (usuarios e catalogo).
  *
  * <p>Fica fora das migrations de proposito: hash de senha e gerado em runtime pelo
- * {@link PasswordEncoder}, entao nenhum hash BCrypt fica versionado no repositorio -- e o
+ * {@link PasswordEncoder}, entao nenhum hash BCrypt fica versionado no repositorio, e o
  * mesmo motivo pelo qual isso pode ser desligado com
  * {@code orderflow.demo-data.enabled=false} em qualquer ambiente que nao seja demo.</p>
  *

@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>A chave da mensagem e o id do agregado: o Kafka garante ordem dentro de uma particao,
  * entao todos os eventos de um mesmo pedido caem na mesma particao e chegam ao consumidor
- * na ordem em que aconteceram -- {@code Order.Paid} nunca antes de {@code Order.Placed}.</p>
+ * na ordem em que aconteceram. {@code Order.Paid} nunca antes de {@code Order.Placed}.</p>
  *
  * <p>O envio e sincronizado com {@code get(timeout)} porque quem chama e o relay: ele
  * precisa saber se deu certo antes de marcar a linha da outbox como publicada.</p>

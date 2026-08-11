@@ -23,7 +23,7 @@ import java.util.List;
  *
  * <p>Token ausente ou invalido nao gera erro aqui: o filtro apenas nao autentica e deixa a
  * cadeia seguir. Quem decide se aquela rota exigia autenticacao e o {@code SecurityConfig},
- * e a resposta 401 sai do entry point -- assim as rotas publicas continuam publicas mesmo
+ * e a resposta 401 sai do entry point. Assim as rotas publicas continuam publicas mesmo
  * quando o cliente manda um token vencido.</p>
  */
 @Component

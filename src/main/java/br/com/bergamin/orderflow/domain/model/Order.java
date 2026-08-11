@@ -21,7 +21,7 @@ import java.util.UUID;
  * de estado. Nao existe {@code setStatus} publico: quem chama descreve a intencao
  * ({@link #markPaid}, {@link #cancel}) e o agregado decide se e legal.</p>
  *
- * <p>Classe sem nenhuma anotacao de framework -- os testes de dominio rodam em
+ * <p>Classe sem nenhuma anotacao de framework. Os testes de dominio rodam em
  * milissegundos, sem subir contexto Spring.</p>
  */
 public class Order {

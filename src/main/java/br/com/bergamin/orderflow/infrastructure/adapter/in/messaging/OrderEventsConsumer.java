@@ -15,12 +15,12 @@ import java.nio.charset.StandardCharsets;
  * Adaptador de entrada por mensageria.
  *
  * <p>Fecha o ciclo do outbox mostrando o outro lado: e aqui que entrariam os efeitos
- * assincronos de um pedido -- e-mail de confirmacao, baixa no ERP, atualizacao de um
+ * assincronos de um pedido. E-mail de confirmacao, baixa no ERP, atualizacao de um
  * indice de busca. Hoje ele registra a metrica {@code orderflow.events.consumed}, que
  * aparece no Prometheus via Actuator.</p>
  *
  * <p>Como a entrega e "pelo menos uma vez", qualquer efeito colateral colocado aqui precisa
- * ser idempotente -- por exemplo, gravando o id do evento antes de agir.</p>
+ * ser idempotente, por exemplo, gravando o id do evento antes de agir.</p>
  */
 @Component
 @ConditionalOnProperty(name = "orderflow.messaging.enabled", havingValue = "true", matchIfMissing = true)

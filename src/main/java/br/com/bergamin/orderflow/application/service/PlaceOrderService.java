@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Cria o pedido: reserva estoque, grava o pedido e enfileira os eventos -- tudo em uma
+ * Cria o pedido: reserva estoque, grava o pedido e enfileira os eventos. Tudo em uma
  * transacao so.
  *
  * <p>Se qualquer passo falhar (estoque acabou, banco caiu), nada sobra pela metade: nem

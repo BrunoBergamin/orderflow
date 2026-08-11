@@ -17,7 +17,7 @@ import java.util.UUID;
 /**
  * Emissao e validacao dos tokens JWT (HS256).
  *
- * <p>A chave vem de configuracao e nunca do codigo -- em producao entra por variavel de
+ * <p>A chave vem de configuracao e nunca do codigo. Em producao entra por variavel de
  * ambiente. O {@code application.yml} traz um valor apenas para desenvolvimento local, e a
  * aplicacao nao sobe se ele nao for substituido em outro perfil.</p>
  */

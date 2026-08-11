@@ -36,7 +36,7 @@ import java.util.UUID;
  * Recurso de pedidos.
  *
  * <p>O controller nao tem regra: converte HTTP em comando, chama o caso de uso e converte a
- * resposta. Nem o {@code customerId} vem do corpo -- ele sai do token, senao qualquer
+ * resposta. Nem o {@code customerId} vem do corpo. Ele sai do token, senao qualquer
  * cliente criaria pedido no nome de outro.</p>
  */
 @RestController
