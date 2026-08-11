@@ -31,11 +31,16 @@ entrega no Kafka depois, com retentativa.
 ## Rodando
 
 ```bash
-docker compose up --build
+docker compose up --build        # compila o código local
+docker compose up --pull always  # baixa a imagem pronta do GHCR, sem compilar
 ```
 
 Sobe PostgreSQL, Kafka (KRaft, sem ZooKeeper) e a API. Swagger em
 http://localhost:8080/swagger-ui.html.
+
+A imagem é publicada em `ghcr.io/brunobergamin/orderflow` a cada push na `main`, e só
+depois de os testes passarem — imagem quebrada no registry é pior que imagem nenhuma,
+porque parece que funciona.
 
 Dois usuários já vêm criados: `cliente@orderflow.dev` / `cliente123` e
 `admin@orderflow.dev` / `admin123`.

@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,12 +48,19 @@ class RateLimitIT extends AbstractIntegrationTest {
     private UUID produtoId;
 
     /**
-     * IP proprio por teste.
+     * IP proprio por teste, tirado de um contador.
      *
      * <p>Os baldes vivem em um cache compartilhado pelo contexto, entao sem isso um teste
      * gastaria a cota do seguinte. Usar {@code X-Forwarded-For} isola cada um e, de quebra,
      * exercita o tratamento do cabecalho de proxy.</p>
+     *
+     * <p>Contador, e nao sorteio: a primeira versao usava um numero aleatorio entre 250
+     * valores e dois testes acabavam sorteando o mesmo IP de vez em quando. Passava na
+     * maquina e quebrava no CI -- teste instavel e pior do que teste nenhum, porque ensina
+     * o time a ignorar build vermelho.</p>
      */
+    private static final AtomicInteger CONTADOR_DE_IP = new AtomicInteger();
+
     private String ipDoTeste;
 
     @BeforeEach
@@ -60,7 +68,9 @@ class RateLimitIT extends AbstractIntegrationTest {
         limparBanco();
         criarUsuario("cliente@teste.dev", "senha123", "CUSTOMER");
         produtoId = criarProduto("TEC-001", "100.00", 500);
-        ipDoTeste = "203.0.113." + (Math.abs(UUID.randomUUID().hashCode()) % 250 + 1);
+
+        int sequencial = CONTADOR_DE_IP.incrementAndGet();
+        ipDoTeste = "10.%d.%d.%d".formatted(sequencial / 65536 % 256, sequencial / 256 % 256, sequencial % 256);
     }
 
     @Test

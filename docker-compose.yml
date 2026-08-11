@@ -48,6 +48,10 @@ services:
       retries: 12
 
   api:
+    # Os dois caminhos convivem:
+    #   docker compose up --build        -> compila o codigo local
+    #   docker compose up --pull always  -> baixa a imagem pronta do GHCR, sem compilar
+    image: ghcr.io/brunobergamin/orderflow:latest
     build: .
     container_name: orderflow-api
     ports:
