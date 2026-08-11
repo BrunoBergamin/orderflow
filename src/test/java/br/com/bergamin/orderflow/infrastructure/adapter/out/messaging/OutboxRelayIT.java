@@ -79,8 +79,7 @@ class OutboxRelayIT extends AbstractIntegrationTest {
 
         relay.drainPendingEvents();
 
-        ConsumerRecord<String, String> mensagem =
-                KafkaTestUtils.getSingleRecord(consumidorDeTeste, TOPICO, Duration.ofSeconds(20));
+        ConsumerRecord<String, String> mensagem = aguardarMensagemDoPedido(pedido.getId());
 
         assertThat(mensagem.key())
                 .as("a chave e o id do pedido, o que garante ordem por agregado na particao")
@@ -96,6 +95,52 @@ class OutboxRelayIT extends AbstractIntegrationTest {
         assertThat(eventosPendentes())
                 .as("linha marcada como publicada, entao o relay nao a reenvia")
                 .isZero();
+    }
+
+    @Test
+    @DisplayName("o trace guardado na linha atravessa a fronteira assincrona ate o consumidor")
+    void propagaTraceIdGravadoNaOutbox() {
+        limparBanco();
+        UUID cliente = criarUsuario("trace@teste.dev", "senha123", "CUSTOMER");
+        UUID produto = criarProduto("TRC-001", "100.00", 5);
+
+        consumidorDeTeste = criarConsumidor();
+
+        Order pedido = placeOrder.place(new PlaceOrderUseCase.Command(
+                cliente, List.of(new PlaceOrderUseCase.Command.Line(produto, 1)), null)).order();
+
+        // O caso de uso foi chamado direto, sem requisicao HTTP, entao nao ha span ativo.
+        // Simula aqui o que a API gravaria: o trace da requisicao que originou o pedido.
+        String traceDaRequisicao = "4bf92f3577b34da6a3ce929d0e0e4736";
+        jdbcTemplate.update("UPDATE outbox_event SET trace_id = ?", traceDaRequisicao);
+
+        relay.drainPendingEvents();
+
+        ConsumerRecord<String, String> mensagem = aguardarMensagemDoPedido(pedido.getId());
+
+        assertThat(cabecalho(mensagem, "traceId"))
+                .as("sem isto o rastro morreria no commit e o consumidor comecaria do zero")
+                .isEqualTo(traceDaRequisicao);
+    }
+
+    /**
+     * Espera a mensagem daquele pedido especifico.
+     *
+     * <p>Os testes desta classe dividem o mesmo topico, e o consumidor le desde o inicio --
+     * entao "pegar o unico registro" seria falso. Filtrar pela chave torna cada teste
+     * independente da ordem em que rodam.</p>
+     */
+    private ConsumerRecord<String, String> aguardarMensagemDoPedido(UUID orderId) {
+        long limite = System.nanoTime() + Duration.ofSeconds(20).toNanos();
+        while (System.nanoTime() < limite) {
+            for (ConsumerRecord<String, String> registro :
+                    KafkaTestUtils.getRecords(consumidorDeTeste, Duration.ofSeconds(2))) {
+                if (orderId.toString().equals(registro.key())) {
+                    return registro;
+                }
+            }
+        }
+        throw new AssertionError("a mensagem do pedido " + orderId + " nao chegou ao topico");
     }
 
     private Consumer<String, String> criarConsumidor() {

@@ -95,6 +95,16 @@ Isso obrigou a separar o `OrderPaymentApplier` em outro bean. `@Transactional` s
 quando a chamada passa pelo proxy do Spring — se o método morasse na mesma classe e fosse
 chamado com `this.apply(...)`, a anotação seria silenciosamente ignorada.
 
+**O trace da requisição viaja dentro da linha da outbox.** Esse foi o detalhe que eu não
+tinha previsto. A outbox quebra a correlação automática: quando o relay publica o evento, a
+requisição HTTP já terminou e o contexto de trace daquela thread não existe mais. O rastro
+morria no commit e recomeçava do zero no consumidor — justamente onde investigar um problema
+fica difícil.
+
+A solução foi guardar o `trace_id` na própria linha e reenviá-lo como cabeçalho na hora de
+publicar. Hoje uma busca por aquele trace traz a história inteira: o POST aqui e a
+notificação entregue no outro serviço, horas depois.
+
 **`FOR UPDATE SKIP LOCKED` no relay da outbox.** É o que permite rodar várias instâncias da
 aplicação: cada uma tranca o próprio lote e as outras pulam essas linhas em vez de esperar.
 Sem isso, ou os eventos sairiam duplicados, ou as instâncias formariam fila numa trava.
@@ -124,8 +134,8 @@ dependentes de rede e não reproduzíveis. O que importa arquiteturalmente é o 
 ./mvnw verify    # + 18 testes de integração com PostgreSQL real
 ```
 
-São 63 no total: 20 de domínio, 13 de casos de uso com Mockito, 8 regras de arquitetura,
-16 de API, 1 de concorrência e 1 do outbox com Kafka.
+São 65 no total: 20 de domínio, 13 de casos de uso com Mockito, 8 regras de arquitetura,
+17 de API, 1 de concorrência e 2 do outbox com Kafka.
 
 Os testes de integração usam **PostgreSQL real via Testcontainers**, não H2. As coisas de
 que este projeto depende — `FOR UPDATE SKIP LOCKED`, índice parcial, `TIMESTAMPTZ`, o
@@ -170,6 +180,8 @@ inesperado devolve um `errorId` correlacionado ao log, nunca stack trace.
   limite de memória (causa clássica de `OOMKilled` em Kubernetes)
 - O login devolve a mesma mensagem para e-mail inexistente e senha errada — senão a API vira
   um verificador de quais e-mails estão cadastrados
+- O `Tracer` é injetado como `ObjectProvider` — se o rastreamento for removido, o pedido
+  continua sendo gravado. Observabilidade não pode virar requisito para o negócio operar
 
 ## Stack
 

@@ -40,12 +40,19 @@ public class KafkaEventSender {
      *                consumidor nao tem como distinguir uma reentrega de um fato novo e
      *                acabaria processando o mesmo evento duas vezes.
      */
-    public void send(UUID eventId, UUID aggregateId, String eventType, String payload) throws Exception {
+    public void send(UUID eventId, UUID aggregateId, String eventType, String payload,
+                     String traceId) throws Exception {
         ProducerRecord<String, String> record =
                 new ProducerRecord<>(topic, aggregateId.toString(), payload);
         record.headers().add("eventId", eventId.toString().getBytes(StandardCharsets.UTF_8));
         record.headers().add("eventType", eventType.getBytes(StandardCharsets.UTF_8));
         record.headers().add("aggregateId", aggregateId.toString().getBytes(StandardCharsets.UTF_8));
+
+        // Reenvia o trace da requisicao original, guardado na linha da outbox. E o que
+        // costura o log dos dois servicos apesar de horas terem passado entre eles.
+        if (traceId != null) {
+            record.headers().add("traceId", traceId.getBytes(StandardCharsets.UTF_8));
+        }
 
         kafkaTemplate.send(record).get(sendTimeoutSeconds, TimeUnit.SECONDS);
     }

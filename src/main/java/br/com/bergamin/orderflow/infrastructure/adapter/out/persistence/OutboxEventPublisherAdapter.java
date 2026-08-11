@@ -6,6 +6,8 @@ import br.com.bergamin.orderflow.infrastructure.adapter.out.persistence.entity.O
 import br.com.bergamin.orderflow.infrastructure.adapter.out.persistence.repository.OutboxEventJpaRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.tracing.Tracer;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +31,21 @@ public class OutboxEventPublisherAdapter implements DomainEventPublisherPort {
     private final OutboxEventJpaRepository repository;
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    private final ObjectProvider<Tracer> tracer;
 
+    /**
+     * @param tracer via {@code ObjectProvider} para que a gravacao do evento continue
+     *               funcionando se o rastreamento for removido da aplicacao -- observabilidade
+     *               nao pode ser requisito para o negocio operar
+     */
     public OutboxEventPublisherAdapter(OutboxEventJpaRepository repository,
                                        ObjectMapper objectMapper,
-                                       Clock clock) {
+                                       Clock clock,
+                                       ObjectProvider<Tracer> tracer) {
         this.repository = repository;
         this.objectMapper = objectMapper;
         this.clock = clock;
+        this.tracer = tracer;
     }
 
     @Override
@@ -54,7 +64,17 @@ public class OutboxEventPublisherAdapter implements DomainEventPublisherPort {
                 AGGREGATE_TYPE,
                 event.eventType(),
                 serialize(event),
-                clock.instant());
+                clock.instant(),
+                currentTraceId());
+    }
+
+    /** Trace da requisicao em curso, ou {@code null} se nao houver rastreamento ativo. */
+    private String currentTraceId() {
+        Tracer activeTracer = tracer.getIfAvailable();
+        if (activeTracer == null || activeTracer.currentSpan() == null) {
+            return null;
+        }
+        return activeTracer.currentSpan().context().traceId();
     }
 
     private String serialize(DomainEvent event) {

@@ -95,6 +95,13 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Rastreamento distribuido. Sem exportador configurado nao ha para onde enviar os
+             spans, mas o traceId ja aparece em todo log e viaja entre os servicos, que e o
+             que resolve "de onde veio esse erro?" no dia a dia. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
 
         <!-- Documentacao -->
         <dependency>

@@ -48,18 +48,31 @@ public class OutboxEventJpaEntity {
     @Column(name = "last_error", length = 500)
     private String lastError;
 
+    /**
+     * Trace da requisicao que originou o evento.
+     *
+     * <p>Guardado na linha porque a outbox quebra a correlacao automatica: quando o relay
+     * publica, a requisicao HTTP ja terminou e o contexto de trace da thread nao existe
+     * mais. Sem isto, o rastro do pedido morre no commit e recomeca do zero no consumidor,
+     * que e exatamente onde investigar um problema fica dificil.</p>
+     */
+    @Column(name = "trace_id", length = 64)
+    private String traceId;
+
     protected OutboxEventJpaEntity() {
         // exigido pelo JPA
     }
 
     public OutboxEventJpaEntity(UUID id, UUID aggregateId, String aggregateType,
-                                String eventType, String payload, Instant createdAt) {
+                                String eventType, String payload, Instant createdAt,
+                                String traceId) {
         this.id = id;
         this.aggregateId = aggregateId;
         this.aggregateType = aggregateType;
         this.eventType = eventType;
         this.payload = payload;
         this.createdAt = createdAt;
+        this.traceId = traceId;
         this.attempts = 0;
     }
 
@@ -107,5 +120,9 @@ public class OutboxEventJpaEntity {
 
     public String getLastError() {
         return lastError;
+    }
+
+    public String getTraceId() {
+        return traceId;
     }
 }

@@ -70,6 +70,12 @@ management:
   metrics:
     tags:
       application: orderflow
+  tracing:
+    sampling:
+      # 100% em desenvolvimento para que todo pedido apareca no rastro. Em producao com
+      # volume alto isso se reduz -- amostrar tudo custa CPU e armazenamento sem responder
+      # nenhuma pergunta a mais.
+      probability: ${TRACING_SAMPLE_RATE:1.0}
 
 springdoc:
   swagger-ui:

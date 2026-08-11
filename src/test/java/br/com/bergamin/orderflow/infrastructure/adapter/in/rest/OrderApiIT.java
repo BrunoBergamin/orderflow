@@ -128,6 +128,22 @@ class OrderApiIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("o evento guarda o trace da requisicao que o originou")
+    void gravaTraceDaRequisicaoNaOutbox() throws Exception {
+        mockMvc.perform(post("/api/v1/orders")
+                        .header("Authorization", "Bearer " + tokenCliente)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoPedido(tecladoId, 1)))
+                .andExpect(status().isCreated());
+
+        // Preenchido a partir do span da requisicao HTTP. E o que permite, mais tarde,
+        // achar todos os eventos gerados por uma requisicao especifica.
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT trace_id FROM outbox_event WHERE event_type = 'Order.Placed'", String.class))
+                .isNotBlank();
+    }
+
+    @Test
     @DisplayName("repetir a Idempotency-Key devolve o mesmo pedido, sem duplicar nem baixar estoque de novo")
     void idempotenciaEvitaPedidoDuplicado() throws Exception {
         String chave = "compra-" + UUID.randomUUID();

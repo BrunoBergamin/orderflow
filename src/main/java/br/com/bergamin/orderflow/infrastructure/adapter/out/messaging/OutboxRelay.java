@@ -56,7 +56,8 @@ public class OutboxRelay {
         int published = 0;
         for (OutboxEventJpaEntity event : batch) {
             try {
-                sender.send(event.getId(), event.getAggregateId(), event.getEventType(), event.getPayload());
+                sender.send(event.getId(), event.getAggregateId(), event.getEventType(),
+                        event.getPayload(), event.getTraceId());
                 event.markPublished(clock.instant());
                 published++;
             } catch (Exception e) {
