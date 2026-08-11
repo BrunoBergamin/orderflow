@@ -108,7 +108,7 @@ chamado com `this.apply(...)`, a anotação seria silenciosamente ignorada.
 **O trace da requisição viaja dentro da linha da outbox.** Esse foi o detalhe que eu não
 tinha previsto. A outbox quebra a correlação automática: quando o relay publica o evento, a
 requisição HTTP já terminou e o contexto de trace daquela thread não existe mais. O rastro
-morria no commit e recomeçava do zero no consumidor, justamente onde investigar um problema
+morria no commit e recomeçava do zero no consumidor, bem onde investigar um problema
 fica difícil.
 
 A solução foi guardar o `trace_id` na própria linha e reenviá-lo como cabeçalho na hora de
