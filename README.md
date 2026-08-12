@@ -163,12 +163,20 @@ dependentes de rede e não reproduzíveis. O que importa arquiteturalmente é o 
 ## Testes
 
 ```bash
-./mvnw test      # 45 testes, ~15s, não precisa de Docker
+./mvnw test      # 50 testes, ~15s, não precisa de Docker
 ./mvnw verify    # + 25 testes de integração com PostgreSQL real
 ```
 
-São 70 no total: 20 de domínio, 13 de casos de uso com Mockito, 8 regras de arquitetura,
-17 de API, 5 de limite de vazão, 1 de concorrência e 2 do outbox com Kafka.
+São 75 no total: 20 de domínio, 13 de casos de uso com Mockito, 8 regras de arquitetura,
+5 de contrato dos eventos, 17 de API, 5 de limite de vazão, 1 de concorrência e 2 do outbox.
+
+**O contrato do JSON também é teste.** Existe um consumidor do outro lado da fila, o
+[orderflow-fulfillment](https://github.com/BrunoBergamin/orderflow-fulfillment), e ele lê
+campo a campo. Renomear `occurredAt` aqui compilaria, passaria em todos os outros testes e
+só quebraria em produção, na hora em que a mensagem chegasse no outro serviço.
+
+O `OrderEventContractTest` trava o formato publicado. Se alguém mudar um campo que o
+consumidor usa, o build falha antes de a mudança sair daqui.
 
 Os testes de integração usam **PostgreSQL real via Testcontainers**, não H2.
 
