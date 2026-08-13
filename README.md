@@ -244,6 +244,11 @@ camadas e GitHub Actions.
 - [orderflow-reconciliation](https://github.com/BrunoBergamin/orderflow-reconciliation),
   conciliação financeira em lote com Spring Batch
 
+Para ver os três funcionando juntos sem clonar nada além de um repositório:
+[orderflow-platform](https://github.com/BrunoBergamin/orderflow-platform), um
+`docker compose up -d` e um roteiro guiado que acompanha o pedido nascendo, atravessando a
+fila e reaparecendo na conciliação.
+
 ---
 
 **Bruno Alves Bergamin**, back-end Java ·
