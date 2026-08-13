@@ -42,5 +42,9 @@ HEALTHCHECK --interval=15s --timeout=3s --start-period=40s --retries=5 \
 
 # MaxRAMPercentage faz a JVM respeitar o limite de memoria do container em vez de enxergar
 # a RAM do host inteiro -- causa classica de OOMKilled em Kubernetes.
+#
+# O `jarmode=tools` da etapa anterior produz `app.jar` + `lib/`, com o Class-Path
+# no manifesto: quem inicia e o `java -jar`. O JarLauncher pertence ao formato
+# antigo (`jarmode=layertools`), que explodia as classes do loader na imagem.
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-XX:+ExitOnOutOfMemoryError", \
-            "org.springframework.boot.loader.launch.JarLauncher"]
+            "-jar", "app.jar"]
